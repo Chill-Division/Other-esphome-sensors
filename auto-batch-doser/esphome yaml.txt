@@ -1,0 +1,115 @@
+web_server:
+  port: 80
+
+uart:
+  tx_pin: GPIO26     #17 for PoESP32, 26 for AtomLite
+  rx_pin: GPIO32     #16 for PoESP32, 32 for AtomLite
+  baud_rate: 115200
+
+switch:
+  - platform: template
+    name: "Motor 1 Power"
+    id: motor_1_power
+    optimistic: true
+    turn_on_action:
+      - uart.write: "Motor 1 ON\n"
+    turn_off_action:
+      - uart.write: "Motor 1 OFF\n"
+
+  - platform: template
+    name: "Motor 1 Direction"
+    id: motor_1_direction
+    optimistic: true
+    turn_on_action:
+      # Send UART command first
+      - uart.write: "Motor 1 FWD\n"
+      # Then update the text sensor using a lambda
+      - lambda: id(motor_1_direction_text).publish_state("Forward");
+    turn_off_action:
+      # Send UART command first
+      - uart.write: "Motor 1 REV\n"
+      # Then update the text sensor using a lambda
+      - lambda: id(motor_1_direction_text).publish_state("Reverse");
+
+  - platform: template
+    name: "Motor 2 Power"
+    id: motor_2_power
+    optimistic: true
+    turn_on_action:
+      - uart.write: "Motor 2 ON\n"
+    turn_off_action:
+      - uart.write: "Motor 2 OFF\n"
+
+  - platform: template
+    name: "Motor 2 Direction"
+    id: motor_2_direction
+    optimistic: true
+    turn_on_action:
+      - uart.write: "Motor 2 FWD\n"
+      - lambda: id(motor_2_direction_text).publish_state("Forward");
+    turn_off_action:
+      - uart.write: "Motor 2 REV\n"
+      - lambda: id(motor_2_direction_text).publish_state("Reverse");
+
+  - platform: template
+    name: "Motor 3 Power"
+    id: motor_3_power
+    optimistic: true
+    turn_on_action:
+      - uart.write: "Motor 3 ON\n"
+    turn_off_action:
+      - uart.write: "Motor 3 OFF\n"
+
+  - platform: template
+    name: "Motor 3 Direction"
+    id: motor_3_direction
+    optimistic: true
+    turn_on_action:
+      - uart.write: "Motor 3 FWD\n"
+      - lambda: id(motor_3_direction_text).publish_state("Forward");
+    turn_off_action:
+      - uart.write: "Motor 3 REV\n"
+      - lambda: id(motor_3_direction_text).publish_state("Reverse");
+
+  - platform: template
+    name: "Motor 4 Power"
+    id: motor_4_power
+    optimistic: true
+    turn_on_action:
+      - uart.write: "Motor 4 ON\n"
+    turn_off_action:
+      - uart.write: "Motor 4 OFF\n"
+
+  - platform: template
+    name: "Motor 4 Direction"
+    id: motor_4_direction
+    optimistic: true
+    turn_on_action:
+      - uart.write: "Motor 4 FWD\n"
+      - lambda: id(motor_4_direction_text).publish_state("Forward");
+    turn_off_action:
+      - uart.write: "Motor 4 REV\n"
+      - lambda: id(motor_4_direction_text).publish_state("Reverse");
+
+# Text sensors now just define the entity.
+# Their state is set by automations (on_boot and switch actions).
+text_sensor:
+  - platform: template
+    name: "Motor 1 Direction Text"
+    id: motor_1_direction_text
+    # No lambda or update_interval needed here
+
+  - platform: template
+    name: "Motor 2 Direction Text"
+    id: motor_2_direction_text
+    # No lambda or update_interval needed here
+
+  - platform: template
+    name: "Motor 3 Direction Text"
+    id: motor_3_direction_text
+    # No lambda or update_interval needed here
+
+  - platform: template
+    name: "Motor 4 Direction Text"
+    id: motor_4_direction_text
+    # No lambda or update_interval needed here
