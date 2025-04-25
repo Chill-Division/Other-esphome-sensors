@@ -7,20 +7,23 @@
 
 // Define speed constants - higher values = slower speed
 // These values are tuned for approximately 600mL/min flow rate
-#define SPEED_START        500  // Starting/ending speed (slowest)
-#define SPEED_25_PERCENT   450  // 25% of max speed
-#define SPEED_50_PERCENT   420  // 50% of max speed  
-#define SPEED_75_PERCENT   380  // 75% of max speed
-#define SPEED_100_PERCENT  350  // Maximum speed
+#define SPEED_START        700  // Starting/ending speed (slowest)
+#define SPEED_25_PERCENT   600  // 25% of max speed
+#define SPEED_50_PERCENT   500  // 50% of max speed  
+#define SPEED_75_PERCENT   400  // 75% of max speed
+#define SPEED_100_PERCENT  300  // Maximum speed
 
 // Create independent speed control for each motor
 struct MotorState {
   int stepDelay = SPEED_START;  // delay between steps
-  unsigned long lastChange = 0;
+  unsigned long lastChange = 0;  // last time speed was changed
+  unsigned long lastStepTime = 0;  // last time a step was taken
   bool isActive = false;        // whether the motor is running
   bool isRampingDown = false;   // whether the motor is ramping down
   bool directionChangePending = false; // whether a direction change is pending
   int newDirection = 0;         // the new direction to set after slowing down
+  bool stepState = false;       // current state of the step pin (HIGH/LOW)
+  int stepCounter = 0;          // counter for tracking steps
 };
 
 MotorState motors[5]; // Array for 4 motors (index 1-4)
@@ -89,10 +92,13 @@ void Stepper_Init() {
   for(int i = 1; i <= 4; i++) {
     motors[i].stepDelay = SPEED_START;
     motors[i].lastChange = 0;
+    motors[i].lastStepTime = 0;
     motors[i].isActive = false;
     motors[i].isRampingDown = false;
     motors[i].directionChangePending = false;
     motors[i].newDirection = 0;
+    motors[i].stepState = false;
+    motors[i].stepCounter = 0;
   }
 }
 
@@ -159,15 +165,31 @@ void speed_Adapter() {
 }
 
 void Stepper_Clock_Loop() {
+  unsigned long currentTime = micros();
+  
   // Handle each motor independently
   for(int m = 1; m <= 4; m++) {
     if(motors[m].isActive || motors[m].isRampingDown || motors[m].directionChangePending) {
-      // Only pulse motors that are active, ramping down, or changing direction
-      for (int i = 0; i < 200; i++) {
-        digitalWrite(getClockPin(m), HIGH);
-        delayMicroseconds(motors[m].stepDelay);
-        digitalWrite(getClockPin(m), LOW);
-        delayMicroseconds(motors[m].stepDelay);
+      // Only process motors that are active, ramping down, or changing direction
+      
+      // Check if it's time for this motor to take a step
+      if(currentTime - motors[m].lastStepTime >= motors[m].stepDelay) {
+        // Toggle step pin state
+        motors[m].stepState = !motors[m].stepState;
+        digitalWrite(getClockPin(m), motors[m].stepState ? HIGH : LOW);
+        
+        // Update last step time
+        motors[m].lastStepTime = currentTime;
+        
+        // Count completed steps (one complete step is HIGH then LOW)
+        if(!motors[m].stepState) { // If we just went LOW, that's a complete step
+          motors[m].stepCounter++;
+          
+          // Reset counter after 200 steps (one full rotation)
+          if(motors[m].stepCounter >= 200) {
+            motors[m].stepCounter = 0;
+          }
+        }
       }
     }
   }
@@ -180,10 +202,14 @@ void Stepper_Cmd(int Motor_Number, int Cmd, int State) {  // CMD case 1 -> Power
     case Power:
       if (State == 0) { // Power ON
         motors[Motor_Number].lastChange = millis();
+        motors[Motor_Number].lastStepTime = micros(); // Initialize step timing
         motors[Motor_Number].stepDelay = SPEED_START; // Start at slow speed
         motors[Motor_Number].isActive = true;
         motors[Motor_Number].isRampingDown = false;
         motors[Motor_Number].directionChangePending = false;
+        motors[Motor_Number].stepCounter = 0; // Reset step counter
+        motors[Motor_Number].stepState = false; // Start with step pin LOW
+        digitalWrite(getClockPin(Motor_Number), LOW); // Ensure clock pin starts LOW
         digitalWrite(getEnablePin(Motor_Number), LOW); // Enable driver
       } else { // Power OFF - start ramping down
         motors[Motor_Number].lastChange = millis();
