@@ -1,115 +1,247 @@
+esphome:
+  name: gr1-abd
+  friendly_name: gr1-abd
+  # This automation runs once when the ESP boots up
+  # It sets the initial state of the direction text sensors
+  # based on the initial state of the direction switches.
+  # Higher priority ensures it runs early.
+  on_boot:
+    priority: 600  # Default priority is 0. Higher runs earlier.
+    then:
+      - lambda: |-
+          // Motor 1
+          if (id(motor_1_direction).state) {
+            id(motor_1_direction_text).publish_state("Forward");
+          } else {
+            id(motor_1_direction_text).publish_state("Reverse");
+          }
+          // Motor 2
+          if (id(motor_2_direction).state) {
+            id(motor_2_direction_text).publish_state("Forward");
+          } else {
+            id(motor_2_direction_text).publish_state("Reverse");
+          }
+          // Motor 3
+          if (id(motor_3_direction).state) {
+            id(motor_3_direction_text).publish_state("Forward");
+          } else {
+            id(motor_3_direction_text).publish_state("Reverse");
+          }
+          // Motor 4
+          if (id(motor_4_direction).state) {
+            id(motor_4_direction_text).publish_state("Forward");
+          } else {
+            id(motor_4_direction_text).publish_state("Reverse");
+          }
+
+esp32:
+  board: m5stack-core-esp32
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "********************"
+
+ota:
+  - platform: esphome
+    password: "*****************"
+
+ethernet:
+  type: IP101
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO0_IN
+  phy_addr: 1
+  power_pin: GPIO5
+
 web_server:
   port: 80
 
 uart:
-  tx_pin: GPIO26     #17 for PoESP32, 26 for AtomLite
-  rx_pin: GPIO32     #16 for PoESP32, 32 for AtomLite
+  tx_pin: GPIO16     #16 for PoESP32, 26 for AtomLite
+  rx_pin: GPIO17     #17 for PoESP32, 32 for AtomLite
   baud_rate: 115200
+  id: uart_bus
 
 switch:
   - platform: template
     name: "Motor 1 Power"
-    id: motor_1_power
     optimistic: true
+    id: motor_1_power
     turn_on_action:
-      - uart.write: "Motor 1 ON\n"
+      - uart.write:
+          id: uart_bus
+          data: "Motor 1 ON\n"
     turn_off_action:
-      - uart.write: "Motor 1 OFF\n"
+      - uart.write:
+          id: uart_bus
+          data: "Motor 1 OFF\n"
 
   - platform: template
     name: "Motor 1 Direction"
     id: motor_1_direction
     optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON # Try to restore, revert to ON (Forward) otherwise
     turn_on_action:
-      # Send UART command first
-      - uart.write: "Motor 1 FWD\n"
-      # Then update the text sensor using a lambda
-      - lambda: id(motor_1_direction_text).publish_state("Forward");
+      - uart.write:
+          id: uart_bus
+          data: "Motor 1 FWD\n"
+      - lambda: |-
+          id(motor_1_direction_text).publish_state("Forward");
     turn_off_action:
-      # Send UART command first
-      - uart.write: "Motor 1 REV\n"
-      # Then update the text sensor using a lambda
-      - lambda: id(motor_1_direction_text).publish_state("Reverse");
+      - uart.write:
+          id: uart_bus
+          data: "Motor 1 REV\n"
+      - lambda: |-
+          id(motor_1_direction_text).publish_state("Reverse");
 
   - platform: template
     name: "Motor 2 Power"
-    id: motor_2_power
     optimistic: true
+    id: motor_2_power
     turn_on_action:
-      - uart.write: "Motor 2 ON\n"
+      - uart.write:
+          id: uart_bus
+          data: "Motor 2 ON\n"
     turn_off_action:
-      - uart.write: "Motor 2 OFF\n"
+      - uart.write:
+          id: uart_bus
+          data: "Motor 2 OFF\n"
 
   - platform: template
     name: "Motor 2 Direction"
     id: motor_2_direction
     optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON # Try to restore, revert to ON (Forward) otherwise
     turn_on_action:
-      - uart.write: "Motor 2 FWD\n"
-      - lambda: id(motor_2_direction_text).publish_state("Forward");
+      - uart.write:
+          id: uart_bus
+          data: "Motor 2 FWD\n"
+      - lambda: |-
+          id(motor_2_direction_text).publish_state("Forward");
     turn_off_action:
-      - uart.write: "Motor 2 REV\n"
-      - lambda: id(motor_2_direction_text).publish_state("Reverse");
+      - uart.write:
+          id: uart_bus
+          data: "Motor 2 REV\n"
+      - lambda: |-
+          id(motor_2_direction_text).publish_state("Reverse");
 
   - platform: template
     name: "Motor 3 Power"
-    id: motor_3_power
     optimistic: true
+    id: motor_3_power
     turn_on_action:
-      - uart.write: "Motor 3 ON\n"
+      - uart.write:
+          id: uart_bus
+          data: "Motor 3 ON\n"
     turn_off_action:
-      - uart.write: "Motor 3 OFF\n"
+      - uart.write:
+          id: uart_bus
+          data: "Motor 3 OFF\n"
 
   - platform: template
     name: "Motor 3 Direction"
     id: motor_3_direction
     optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON # Try to restore, revert to ON (Forward) otherwise
     turn_on_action:
-      - uart.write: "Motor 3 FWD\n"
-      - lambda: id(motor_3_direction_text).publish_state("Forward");
+      - uart.write:
+          id: uart_bus
+          data: "Motor 3 FWD\n"
+      - lambda: |-
+          id(motor_3_direction_text).publish_state("Forward");
     turn_off_action:
-      - uart.write: "Motor 3 REV\n"
-      - lambda: id(motor_3_direction_text).publish_state("Reverse");
+      - uart.write:
+          id: uart_bus
+          data: "Motor 3 REV\n"
+      - lambda: |-
+          id(motor_3_direction_text).publish_state("Reverse");
 
   - platform: template
     name: "Motor 4 Power"
-    id: motor_4_power
     optimistic: true
+    id: motor_4_power
     turn_on_action:
-      - uart.write: "Motor 4 ON\n"
+      - uart.write:
+          id: uart_bus
+          data: "Motor 4 ON\n"
     turn_off_action:
-      - uart.write: "Motor 4 OFF\n"
+      - uart.write:
+          id: uart_bus
+          data: "Motor 4 OFF\n"
+    on_turn_on: 
+      then:
+        - logger.log: "It's been turned on, waiting 60s"
+        - delay: 60s
+        - logger.log: "It's been turned on for 60s, turning off for measurements test"
+        - switch.turn_off: motor_4_power
+        - logger.log: "Done"
 
   - platform: template
     name: "Motor 4 Direction"
     id: motor_4_direction
     optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON # Try to restore, revert to ON (Forward) otherwise
     turn_on_action:
-      - uart.write: "Motor 4 FWD\n"
-      - lambda: id(motor_4_direction_text).publish_state("Forward");
+      - uart.write:
+          id: uart_bus
+          data: "Motor 4 FWD\n"
+      - lambda: |-
+          id(motor_4_direction_text).publish_state("Forward");
     turn_off_action:
-      - uart.write: "Motor 4 REV\n"
-      - lambda: id(motor_4_direction_text).publish_state("Reverse");
+      - uart.write:
+          id: uart_bus
+          data: "Motor 4 REV\n"
+      - lambda: |-
+          id(motor_4_direction_text).publish_state("Reverse");
 
-# Text sensors now just define the entity.
-# Their state is set by automations (on_boot and switch actions).
+# Add text sensors
 text_sensor:
   - platform: template
-    name: "Motor 1 Direction Text"
+    name: "Motor 1 Direction"
     id: motor_1_direction_text
-    # No lambda or update_interval needed here
+    lambda: |-
+      if(id(motor_1_direction).state){
+        return {"Forward"};
+      }else{
+        return {"Reverse"};
+      }
+    update_interval: 60s  # Only update every minute to avoid constant updates
 
   - platform: template
-    name: "Motor 2 Direction Text"
+    name: "Motor 2 Direction"
     id: motor_2_direction_text
-    # No lambda or update_interval needed here
+    lambda: |-
+      if(id(motor_2_direction).state){
+        return {"Forward"};
+      }else{
+        return {"Reverse"};
+      }
+    update_interval: 60s  # Only update every minute to avoid constant updates
 
   - platform: template
-    name: "Motor 3 Direction Text"
+    name: "Motor 3 Direction"
     id: motor_3_direction_text
-    # No lambda or update_interval needed here
+    lambda: |-
+      if(id(motor_3_direction).state){
+        return {"Forward"};
+      }else{
+        return {"Reverse"};
+      }
+    update_interval: 60s  # Only update every minute to avoid constant updates
 
   - platform: template
-    name: "Motor 4 Direction Text"
+    name: "Motor 4 Direction"
     id: motor_4_direction_text
-    # No lambda or update_interval needed here
+    lambda: |-
+      if(id(motor_4_direction).state){
+        return {"Forward"};
+      }else{
+        return {"Reverse"};
+      }
+    update_interval: 60s  # Only update every minute to avoid constant updates
