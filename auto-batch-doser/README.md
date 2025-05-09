@@ -60,3 +60,15 @@ You should now be able to click "Upload":
 If you run into issues, double-check your PATH variable to ensure it knows where to find the STM32CubeIDE_CLI. You may need to add the EXPORT commands to your ~/.bashrc on linux.
 
 The Upload Method should be "STM32CubeProgrammer (SWD)"
+
+## ESPHome setup
+
+Create your M5Stack PoESP32 or Atom Lite device.
+
+Add the supplementary yaml from the supplied .txt file
+
+The unit will provide the firmware version on boot. When the direction is "on" it operates in the forward direction. When it is "off" it operates in reverse. We use text-sensors as the method for establishing direction:
+
+![image](https://github.com/user-attachments/assets/b5280282-fa53-4f75-9780-80af478b2000)
+
+When you are happy with the pumps, you should modify the "motor_4_power" and remove the "on_turn_on" which is included by default to benchmark and ensure you are getting 600mL from 60s of power.
