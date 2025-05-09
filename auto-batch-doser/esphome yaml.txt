@@ -245,3 +245,27 @@ text_sensor:
         return {"Reverse"};
       }
     update_interval: 60s  # Only update every minute to avoid constant updates
+
+  - platform: template
+    name: "Firmware Version"
+    id: fw_version_sensor
+    update_interval: 60s
+    lambda: |-
+      static std::string buffer;
+      while (id(uart_bus).available()) {
+        uint8_t byte;
+        id(uart_bus).read_byte(&byte);
+        char c = static_cast<char>(byte);
+
+        if (c == '\n' || c == '\r') {
+          if (buffer.rfind("FW:", 0) == 0) {
+            std::string version = buffer.substr(3);
+            buffer.clear();
+            return version;
+          }
+          buffer.clear();
+        } else {
+          buffer += c;
+        }
+      }
+      return {};
