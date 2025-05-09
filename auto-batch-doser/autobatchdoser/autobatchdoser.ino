@@ -8,7 +8,7 @@ extern MotorState motors[5];
 void setup() {
   ESPSerial.begin(115200);  // Start serial communication at 9600 baud
   Stepper_Init();
-  delay(1000);
+  delay(10000); // Increase delay to 10s so it gets reported back to esphome
   ESPSerial.println("FW:2.0.1");
 }
 
