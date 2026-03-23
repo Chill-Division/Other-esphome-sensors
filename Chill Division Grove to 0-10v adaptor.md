@@ -30,8 +30,10 @@ light:
     name: "Light1"
     id: "Light1"
     output: output_1
+    restore_mode: RESTORE_DEFAULT_OFF
   - platform: monochromatic
     name: "Light2"
     id: "Light2"
     output: output_2
+    restore_mode: RESTORE_DEFAULT_OFF
 </pre>
